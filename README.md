@@ -1,121 +1,140 @@
-# ZORA — Desk Companion & Garden IoT Device
+ZEVRON — ESP32-C3 Personal Desk Companion
+ZEVRON adalah robot pendamping meja (desk companion) berbasis ESP32-C3 Super Mini, layar OLED SSD1306 0,96 inci (128 × 64), satu sensor sentuh TTP223, dan buzzer. Proyek ini menggabungkan ekspresi mata animasi, interaksi satu sentuhan, navigasi Google Maps melalui Chronos BLE, mode mimpi, dan mini-game retro. Casing kotak dirancang menggunakan FreeCAD.
+Status proyek: Prototipe / pengembangan aktif. README ini merujuk pada firmware ZEVRON_DREAM_MODE_MINIGAMES_FINAL.ino dan macro casing Zevron_Kotak_FreeCAD.FCMacro. Keduanya belum dinyatakan lolos pengujian kompilasi dan hardware secara menyeluruh.
 
-**Version:** 1.0  
-**Project:** MZP | ZDYVOID  
-**Platform:** ESP32-C3 Super Mini  
-**Connectivity:** Bluetooth Low Energy (BLE) via Chronos
-
-ZORA is a custom-built IoT desk companion designed to combine interactive expressions, timekeeping, and smartphone connectivity in a compact desktop device.
-
-As part of the **MZP | ZDYVOID IoT ecosystem**, ZORA is envisioned to communicate with other ESP-based devices in the garden, including SmartPlant, while serving as an interactive desk companion.
-
-ZORA v1.0 connects to the **Chronos app** through Bluetooth Low Energy (BLE), enabling supported time and information features without requiring Wi-Fi for Bluetooth-based communication.
-
-> **Status:** v1.0 — Initial release  
-> More features and integrations are planned for future updates.
-
----
-
-## Features
-
-- **Interactive RoboEyes** — Animated eyes for a more expressive desktop companion.
-- **Digital Clock** — Display the time and date with 3 consecutive touches.
-- **Weather Display** — Open the weather screen with 4 consecutive touches when supported weather data is available through Chronos.
-- **Sad Animation** — Trigger a crying expression with 5 consecutive touches.
-- **Angry Animation** — Hold the touch sensor to trigger an angry expression.
-- **BLE Connectivity** — Connect to the Chronos smartphone app using Bluetooth Low Energy.
-- **Compact Hardware Design** — Built around an ESP32-C3 Super Mini with an OLED display and a rechargeable battery system.
-- **Future IoT Integration** — Designed with the long-term goal of communicating with other ESP-based devices in the garden.
-- **Maps Navigation** - Navigate with Gmaps on your phone.<img width="1080" height="1440" alt="WhatsApp Image 2026-10-17 at 12 36 55" src="https://github.com/user-attachments/assets/f7661308-8b7c-489b-b811-974afdb662dd" />
-
-<img width="899" height="1245" alt="WhatsApp Image 2026-10-17 at 12 24 21" src="https://github.com/user-attachments/assets/d1505433-5f7f-4ce4-8c29-211bd31cd6e4" />
-<img width="960" height="1280" alt="WhatsApp Image 2026-10-17 at 12 25 12 (1)" src="https://github.com/user-attachments/assets/420478f6-20e9-4117-968b-2f0f5ca8578e" />
+Fitur utama
+- RoboEyes: wajah dan ekspresi animasi di OLED, dengan pilihan personality.
+- Dream Mode: mulai mengantuk setelah 5 menit tanpa interaksi; tidur setelah 8 menit total (5 + 3 menit); menampilkan mimpi setiap 30 detik. Sentuhan membangunkan Zevron.
+- Chronos BLE: koneksi ponsel diaktifkan atau dimatikan secara manual; default OFF saat boot.
+- Google Maps Auto Navigation: saat data navigasi aktif diterima dari aplikasi Chronos, layar otomatis beralih ke petunjuk arah. Membutuhkan koneksi BLE dan data navigasi dari aplikasi ponsel.
+- Mini Games: Dino Runner (melompati rintangan) dan Fishing Zevron (melempar kail dengan timing yang tepat).
+- Alien Signal / Alien Log: tampilan dan catatan bertema sinyal misterius. Pada varian Dream Mode ini, pemicu pesan alien random saat idle dinonaktifkan agar tidak mengganggu tidur.
+- System Monitor, Clock, Weather, Sound FX, Brightness, Light Mode, Deep Sleep manual, dan Zevron Info.
+- Wi-Fi on-demand: untuk pengaturan koneksi, cuaca, dan pembaruan firmware; tidak harus menyala terus-menerus.
+- OTA firmware: pemeriksaan rilis terbaru dan pembaruan melalui GitHub, sesuai konfigurasi di source code.
+Tidak termasuk: ESP-NOW / penerima pesan KAEL dan fitur Tamagotchi (Happiness/Pet Status). Keduanya telah dihapus dari varian firmware ini.
+Perangkat keras
+Komponen	Keterangan
+Mikrokontroler	ESP32-C3 Super Mini
+Display	OLED SSD1306 I²C, 0,96 inci, 128 × 64, alamat 0x3C
+Input	TTP223 touch sensor, 1 unit
+Audio	Buzzer sesuai rangkaian yang digunakan
+Daya	USB atau sumber daya yang telah diregulasi sesuai kebutuhan board; konfigurasi baterai belum ditetapkan di README ini
+Enclosure	Casing kotak 3D hasil desain FreeCAD
 
 
-## Hardware Components
+Pemetaan pin firmware
+Perangkat	Pin ESP32-C3
+OLED SDA	GPIO 20
+OLED SCL	GPIO 21
+TTP223 OUT	GPIO 5
+Buzzer	GPIO 6
+OLED VCC / GND	Sesuai spesifikasi modul / ground bersama
 
-| Component | Description |
-|---|---|
-| ESP32-C3 Super Mini | Main controller with Wi-Fi and BLE capabilities |
-| 0.96-inch OLED | 128 × 64 display for RoboEyes, clock, and information |
-| Passive Buzzer | Audio feedback and interactive sound effects |
-| Small ON/OFF Switch | Main power control |
-| TP4056 USB Type-C Charging Module | Battery charging module with protection |
-| LiPo Battery | Rechargeable power source |
-| TTP223 Touch Sensor | Touch-based user interaction |
-| Custom Enclosure | Custom-designed case for the device |
 
-## Touch Controls
+Perhatian: Pastikan level tegangan TTP223 aman untuk GPIO 3,3 V ESP32-C3. Periksa kembali pinout board fisik sebelum menyambungkan komponen. Jangan menghubungkan sel baterai Li-ion langsung ke pin yang tidak dirancang untuk tegangan sel tersebut.
 
-| Input | Action |
-|---|---|
-| 3 consecutive touches | Open digital clock |
-| 4 consecutive touches | Open weather display |
-| 5 consecutive touches | Show sad animation |
-| Long touch | Show angry animation |
+Library Arduino
+Firmware mencantumkan dependensi berikut:
+- Adafruit GFX Library
+- Adafruit SSD1306
+- ChronosESP32
+- FluxGarage RoboEyes (FluxGarage_RoboEyes.h)
+- WiFiManager
+- ArduinoJson
+- Library bawaan ESP32 Arduino core: WiFi, Wire, Preferences, HTTPClient, WiFiClientSecure, Update, dan komponen ESP-IDF/FreeRTOS yang tersedia pada versi core yang kompatibel.
+Versi library dan ESP32 Arduino core yang tepat perlu disesuaikan dan diuji bersama firmware ini.
+Instalasi dan upload firmware
+1. Instal Arduino IDE dan dukungan board ESP32 by Espressif Systems.
+2. Pasang library yang tercantum di atas melalui Library Manager atau sumber resminya.
+3. Buka ZEVRON_DREAM_MODE_MINIGAMES_FINAL.ino.
+4. Pilih board ESP32-C3 yang sesuai dengan board fisik, serta port serial yang benar.
+5. Jalankan Verify / Compile. Selesaikan error library atau kompatibilitas jika muncul.
+6. Upload ke board, lalu buka Serial Monitor untuk melihat status boot dan koneksi.
+Pengaturan yang mungkin perlu disesuaikan
+Di bagian awal source code terdapat pengaturan:
+#define OLED_WIDTH 128
+#define OLED_HEIGHT 64
+#define OLED_ADDR 0x3C
+#define OLED_SDA 20
+#define OLED_SCL 21
+#define TOUCH_PIN 5
+#define BUZZER_PIN 6
+Firmware juga memiliki pengaturan koordinat cuaca/waktu yang saat ini ditulis untuk Pangkalpinang (UTC+7), serta endpoint rilis GitHub:
+const char* GITHUB_RELEASE_API =
+    "https://api.github.com/repos/zaldyprtm/zevron-desk-companion/releases/latest";
+Ubah pengaturan tersebut bila perangkat dipakai di lokasi lain atau repositori rilis firmware berubah.
+Cara menggunakan Zevron
+Navigasi touch dari layar utama
+Gesture	Fungsi dalam firmware
+3× tap	Clock
+4× tap	Weather
+5× tap	Google Maps / Navigation
+8× tap	Alien Log
+9× tap atau lebih	Settings
 
-*Touch sequences must be completed within the firmware's configured detection interval.*
 
-## Connectivity
+Di Settings, 1× tap berpindah menu dan 2× tap memilih. Pilih Chronos BLE untuk mengaktifkan atau menonaktifkan BLE secara manual. Pilih Games untuk membuka daftar mini-game.
+Mini-game
+Dino Runner
+- Tap untuk melompat.
+- Hindari rintangan yang bergerak dari kanan.
+- Skor bertambah ketika rintangan berhasil dilewati.
+Fishing Zevron
+- Tap untuk melempar kail.
+- Cocokkan timing lemparan dengan posisi ikan.
+- Permainan berakhir setelah lima lemparan gagal.
+Di menu Games: 1× tap mengganti pilihan, 2× tap memulai. Dalam permainan: tap untuk aksi atau mencoba lagi setelah game over. Long press dimaksudkan untuk keluar ke menu Games; pengaturan timing touch dan perilakunya perlu diuji di perangkat nyata.
+Skor terbaik pada implementasi mini-game ini disimpan dalam variabel RAM, sehingga tidak dijamin bertahan setelah restart.
 
-### Chronos BLE Integration
+Dream Mode
+Kondisi	Waktu tanpa touch
+Normal / Awake	0–5 menit
+Sleepy	Mulai menit ke-5
+Sleeping	Mulai menit ke-8
+Dream vignette	Setiap 30 detik selama tidur
 
-ZORA v1.0 uses Bluetooth Low Energy to communicate with the Chronos app on Android.
 
-Supported functionality depends on the information and commands provided by the app and the installed firmware.
+Dream Mode merupakan animasi tidur OLED, bukan deep sleep mikrokontroler. BLE yang telah diaktifkan dan layanan lain yang diperlukan tetap dapat bekerja. Navigasi Google Maps memiliki prioritas tampilan saat aktif.
+Casing 3D — FreeCAD
+File macro: Zevron_Kotak_FreeCAD.FCMacro.
+Dimensi prototipe
+Parameter	Nilai
+Lebar (X)	55 mm
+Tinggi (Z)	45 mm
+Kedalaman (Y)	30 mm
+Tebal dinding	2 mm
+Bukaan OLED pada macro saat ini	27 × 14 mm
+Posisi awal bukaan OLED	Terpusat horizontal, dimulai pada Z = 19 mm
+Slot USB samping	10 × 5 mm (posisi sementara)
+Lubang buzzer	4 lubang kecil pada panel depan
+Tutup belakang	Bagian terpisah dengan bibir press-fit percobaan
 
-- Time synchronization through BLE.
-- Weather information display when compatible data is received.
-- No Wi-Fi connection is required for BLE-based features.
 
-### Future Garden IoT Integration
-
-ZORA is part of a broader vision to connect desktop companions and garden IoT devices.
-
-Potential future integrations include:
-
-- Communication with ESP8266-based Wemos D1 mini and ESP32-based SmartPlant devices.
-- Sharing plant monitoring data and device status.
-- Cross-device notifications and interactive status updates.
-- A unified ecosystem for desktop companionship and smart gardening.
-
-*Communication between ZORA and other garden devices is a planned integration, not a confirmed feature of v1.0.*
-
-## Development Roadmap
-
-- [x] Interactive RoboEyes
-- [x] Touch-based expressions
-- [x] Chronos BLE integration
-- [x] Digital clock interface
-- [ ] Extended weather information
-- [ ] Communication with garden IoT devices
-- [ ] SmartPlant status integration
-- [ ] Additional expressions and animations
-- [ ] Future firmware improvements
-
-## Getting Started
-
-1. Assemble the hardware according to the project's wiring configuration.
-2. Install the required Arduino libraries for the ESP32-C3, OLED display, RoboEyes, and Chronos BLE integration.
-3. Open the ZORA firmware in Arduino IDE.
-4. Select the appropriate ESP32-C3 board and COM port.
-5. Upload the firmware.
-6. Open the Chronos app on Android and pair with ZORA through the app's device pairing interface.
-
-Library requirements and setup instructions may vary between firmware versions.
-
-## Project Information
-
-**Project name:** ZORA  
-**Version:** v1.0  
-**Developer / Project identity:** MZP | ZDYVOID  
-**Category:** Embedded Systems · IoT · BLE · Desk Companion · Smart Gardening
-
-ZORA is an evolving personal IoT project exploring the connection between interactive desktop devices and smart garden systems.
-
-**More features will be coming soon.**
-
----
-
-**MZP | ZDYVOID**  
-*Building connected devices for the desk and the garden.*
+Penting: Bukaan OLED 27 × 14 mm di macro merupakan ukuran awal, bukan jaminan pas untuk seluruh modul OLED 0,96 inci. Ukur area aktif, kaca, PCB, lubang pemasangan, konektor, dan tinggi komponen sebenarnya menggunakan jangka sorong. Bila hanya ingin menampilkan piksel aktif, bukaan yang lebih kecil mungkin lebih rapi, tetapi harus dipastikan tidak menutup piksel. Dudukan PCB internal dan toleransi cetak juga masih perlu disempurnakan.
+Membuka macro di FreeCAD
+1. Buka FreeCAD.
+2. Masuk ke Macro → Macros.
+3. Buat atau buka macro .FCMacro tersebut.
+4. Jalankan macro untuk membuat CaseBody dan BackLid.
+5. Simpan proyek sebagai .FCStd agar bisa diedit kembali.
+6. Pilih komponen casing dan tutup secara terpisah, lalu File → Export → STL Mesh untuk kebutuhan 3D printing.
+7. Periksa orientasi, ketebalan dinding, toleransi, dan clearance menggunakan slicer sebelum mencetak.
+Macro menghasilkan geometri awal dengan operasi Part; belum merupakan model parametrik Part Design lengkap dengan semua dudukan komponen dan baut.
+Struktur file yang disarankan
+ZEVRON/
+├── README.md
+├── firmware/
+│   └── ZEVRON_DREAM_MODE_MINIGAMES_FINAL.ino
+└── enclosure/
+    └── Zevron_Kotak_FreeCAD.FCMacro
+Catatan pengembangan
+- Penggunaan millis() membantu animasi dan permainan tetap responsif, tetapi tidak otomatis berarti konsumsi listrik minimum.
+- BLE tetap OFF saat boot dan diaktifkan secara manual.
+- ESP-NOW telah dihapus; tidak ada mode penerima pesan KAEL pada varian ini.
+- Fitur cuaca, OTA, dan Chronos memerlukan konfigurasi atau konektivitas yang sesuai.
+- Uji firmware melalui Verify, uji touch fisik, uji navigasi, dan uji casing sebelum menganggap proyek siap dipakai rutin.
+- Jangan menyertakan kata sandi Wi-Fi, token, atau informasi pribadi saat mengunggah source code ke repositori publik.
+Kredit
+ZEVRON — Personal Desk Companion
+Project by ZDYVOID. Dibangun menggunakan ekosistem ESP32, Arduino, FreeCAD, dan library open-source pihak ketiga. Hak cipta dan lisensi masing-masing dependensi mengikuti proyek asalnya.
